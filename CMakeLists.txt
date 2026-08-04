@@ -30,6 +30,7 @@ find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 # ------------------------------------------------------------------------------
 # 3. BUILD GATEWAY CORE LIBRARY
@@ -37,6 +38,7 @@ find_package(yaml-cpp REQUIRED)
 add_library(${PROJECT_NAME}_core
   src/utils/logger.cpp
   src/utils/config_manager.cpp
+  src/ingestion/telemetry_ingestion_engine.cpp
 )
 
 target_include_directories(${PROJECT_NAME}_core PUBLIC
@@ -48,6 +50,7 @@ target_link_libraries(${PROJECT_NAME}_core PUBLIC
   rclcpp::rclcpp
   spdlog::spdlog
   yaml-cpp
+  nlohmann_json::nlohmann_json
   OpenSSL::Crypto
   Threads::Threads
 )
@@ -71,6 +74,6 @@ install(DIRECTORY config/
 )
 
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(rclcpp spdlog yaml-cpp OpenSSL Threads)
+ament_export_dependencies(rclcpp spdlog yaml-cpp nlohmann_json OpenSSL Threads)
 
 ament_package()
