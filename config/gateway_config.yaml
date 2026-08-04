@@ -1,0 +1,25 @@
+gateway:
+  node_name: "secure_telemetry_gateway_node"
+  environment: "production"
+  
+  telemetry:
+    queue_capacity: 2000
+    publish_rate_hz: 50.0
+    enable_validation: true
+    max_payload_bytes: 4096
+
+  security:
+    enable_encryption: true
+    encryption_algorithm: "AES-256-GCM"
+    rate_limit_pps: 500
+    replay_window_seconds: 30
+
+  logging:
+    log_level: "info"
+    max_file_size_mb: 10
+    max_files: 5
+    file_path: "logs/gateway.log"
+
+  storage:
+    database_path: "data/telemetry_history.db"
+    retention_days: 7

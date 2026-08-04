@@ -29,12 +29,14 @@ find_package(sensor_msgs REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 # ------------------------------------------------------------------------------
 # 3. BUILD GATEWAY CORE LIBRARY
 # ------------------------------------------------------------------------------
 add_library(${PROJECT_NAME}_core
   src/utils/logger.cpp
+  src/utils/config_manager.cpp
 )
 
 target_include_directories(${PROJECT_NAME}_core PUBLIC
@@ -45,6 +47,7 @@ target_include_directories(${PROJECT_NAME}_core PUBLIC
 target_link_libraries(${PROJECT_NAME}_core PUBLIC
   rclcpp::rclcpp
   spdlog::spdlog
+  yaml-cpp
   OpenSSL::Crypto
   Threads::Threads
 )
@@ -68,6 +71,6 @@ install(DIRECTORY config/
 )
 
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(rclcpp spdlog OpenSSL Threads)
+ament_export_dependencies(rclcpp spdlog yaml-cpp OpenSSL Threads)
 
 ament_package()
