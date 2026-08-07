@@ -44,61 +44,55 @@ void GatewayNode::declare_node_parameters() {
 void GatewayNode::init_subsystems() {
   std::string db_path = this->get_parameter("db_path").as_string();
 
-  // Initialize SQLite3 Storage Engine
   storage_engine_ = std::make_unique<storage::StorageEngine>(db_path);
   if (!storage_engine_->init()) {
     LOG_ERROR("GatewayNode: Failed to initialize Storage Engine at path: {}", db_path);
   }
 
-  // Create DDS Publishers using SensorDataQoS (Best Effort, Volatile)
   auto qos = rclcpp::SensorDataQoS();
 
   battery_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("~/telemetry/battery", qos);
   temp_pub_ = this->create_publisher<sensor_msgs::msg::Temperature>("~/telemetry/temperature", qos);
   twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("~/telemetry/velocity", qos);
 
-  // Generate 256-bit symmetric encryption key and 96-bit IV
   secret_key_ = security::SecurityEngine::generate_secure_random_bytes(security::AES_256_KEY_SIZE);
   iv_ = security::SecurityEngine::generate_secure_random_bytes(security::GCM_IV_SIZE);
 }
 
-bool GatewayNode::process_incoming_raw_payload(const std::string& raw_payload) {
-  // 1. Ingest and parse raw JSON using parse_and_validate
-  models::TelemetryData data;
-  auto status = ingestion_engine_.parse_and_validate(raw_payload, data);
+bool GatewayNode::process_incoming_raw_payload(
+    const std::string& sender_id,
+    const std::vector<uint8_t>& encrypted_payload,
+    const std::vector<uint8_t>& iv,
+    const std::vector<uint8_t>& tag) 
+{
+  if (!security_engine_.check_rate_limit(sender_id, 10.0, 20.0)) {
+    LOG_WARN("GatewayNode: Rate limit exceeded for '{}'. Dropping packet.", sender_id);
+    return false;
+  }
+
+  static const std::vector<uint8_t> PRE_SHARED_KEY = {
+    0x60, 0x3d, 0xeb, 0x10, 0x15, 0xca, 0x71, 0xbe,
+    0x2b, 0x73, 0xae, 0xf0, 0x85, 0x7d, 0x77, 0x81,
+    0x1f, 0x35, 0x2c, 0x07, 0x3b, 0x61, 0x08, 0xd7,
+    0x2d, 0x98, 0x10, 0xa3, 0x09, 0x14, 0xdf, 0xf4
+  };
+
+  std::vector<uint8_t> plaintext_bytes;
+  if (!security_engine_.decrypt_aes_gcm(encrypted_payload, tag, PRE_SHARED_KEY, iv, plaintext_bytes)) {
+    LOG_ERROR("GatewayNode: Decryption failed for sender '{}'", sender_id);
+    return false;
+  }
+
+  std::string decrypted_json(plaintext_bytes.begin(), plaintext_bytes.end());
+  models::TelemetryData telemetry_data;
+  ingestion::IngestionStatus status = ingestion_engine_.parse_and_validate(decrypted_json, telemetry_data);
+
   if (status != ingestion::IngestionStatus::SUCCESS) {
-    LOG_WARN("GatewayNode: Dropping invalid JSON telemetry frame.");
+    LOG_ERROR("GatewayNode: Failed to parse decrypted payload. Code: {}", static_cast<int>(status));
     return false;
   }
 
-  // 2. Rate limiting check
-  double max_pps = this->get_parameter("max_rate_pps").as_double();
-  double burst = this->get_parameter("burst_capacity").as_double();
-
-  if (!security_engine_.check_rate_limit(data.robot_id, max_pps, burst)) {
-    LOG_WARN("GatewayNode: Packet rate limit exceeded for robot '{}'. Packet dropped.", data.robot_id);
-    return false;
-  }
-
-  // 3. Optional AES-256-GCM encryption verification demo
-  if (this->get_parameter("enable_encryption").as_bool()) {
-    std::vector<uint8_t> plaintext(raw_payload.begin(), raw_payload.end());
-    std::vector<uint8_t> ciphertext, tag, decrypted;
-
-    if (security_engine_.encrypt_aes_gcm(plaintext, secret_key_, iv_, ciphertext, tag)) {
-      if (!security_engine_.decrypt_aes_gcm(ciphertext, tag, secret_key_, iv_, decrypted)) {
-        LOG_ERROR("GatewayNode: Security verification failed for payload.");
-        return false;
-      }
-    }
-  }
-
-  // 4. Push frame into bounded MPMC queue
-  if (!telemetry_queue_.push(data)) {
-    LOG_WARN("GatewayNode: MPMC queue full. Telemetry frame discarded.");
-    return false;
-  }
-
+  telemetry_queue_.push(telemetry_data);
   return true;
 }
 
@@ -111,12 +105,10 @@ void GatewayNode::worker_thread_loop() {
     if (data_opt.has_value()) {
       const auto& data = data_opt.value();
 
-      // 1. Persist to local SQLite storage
       if (storage_engine_) {
         storage_engine_->insert_telemetry(data);
       }
 
-      // 2. Publish frame to ROS 2 DDS Network
       publish_ros_messages(data);
     } else {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -129,22 +121,16 @@ void GatewayNode::worker_thread_loop() {
 void GatewayNode::publish_ros_messages(const models::TelemetryData& data) {
   auto now = this->now();
 
-  // Convert and publish Battery Telemetry
   if (data.sensor_type == "battery") {
     auto battery_msg = sensor_msgs::msg::BatteryState();
     battery_msg.header.stamp = now;
     battery_msg.header.frame_id = data.robot_id;
 
-    if (data.payload_values.count("voltage")) {
-      battery_msg.voltage = static_cast<float>(data.payload_values.at("voltage"));
+    if (data.payload_values.count("battery")) {
+      battery_msg.percentage = static_cast<float>(data.payload_values.at("battery"));
     }
-    if (data.payload_values.count("percentage")) {
-      battery_msg.percentage = static_cast<float>(data.payload_values.at("percentage"));
-    }
-
     battery_pub_->publish(battery_msg);
   }
-  // Convert and publish Temperature Telemetry
   else if (data.sensor_type == "temperature") {
     auto temp_msg = sensor_msgs::msg::Temperature();
     temp_msg.header.stamp = now;
@@ -153,22 +139,16 @@ void GatewayNode::publish_ros_messages(const models::TelemetryData& data) {
     if (data.payload_values.count("temperature")) {
       temp_msg.temperature = data.payload_values.at("temperature");
     }
-
     temp_pub_->publish(temp_msg);
   }
-  // Convert and publish Velocity Commands / Telemetry
-  else if (data.sensor_type == "imu" || data.sensor_type == "velocity") {
+  else if (data.sensor_type == "velocity") {
     auto twist_msg = geometry_msgs::msg::TwistStamped();
     twist_msg.header.stamp = now;
     twist_msg.header.frame_id = data.robot_id;
 
-    if (data.payload_values.count("linear_v")) {
-      twist_msg.twist.linear.x = data.payload_values.at("linear_v");
+    if (data.payload_values.count("velocity_x")) {
+      twist_msg.twist.linear.x = data.payload_values.at("velocity_x");
     }
-    if (data.payload_values.count("angular_v")) {
-      twist_msg.twist.angular.z = data.payload_values.at("angular_v");
-    }
-
     twist_pub_->publish(twist_msg);
   }
 }

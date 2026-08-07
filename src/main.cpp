@@ -3,48 +3,22 @@
 #include "secure_telemetry_gateway/utils/logger.hpp"
 
 int main(int argc, char** argv) {
-  // Initialize ROS 2 C++ client library
   rclcpp::init(argc, argv);
 
-  // Initialize Logger
-  secure_telemetry_gateway::utils::Logger::init();
-  LOG_INFO("==================================================");
-  LOG_INFO(" Starting Secure Telemetry Gateway Node");
-  LOG_INFO("==================================================");
-
-  // Instantiate Node
   auto node = std::make_shared<secure_telemetry_gateway::ros::GatewayNode>();
 
-  // Simulate synthetic telemetry payloads arriving from network socket
-  std::string mock_battery_payload = R"({
-    "robot_id": "robot_alpha",
-    "sensor_type": "battery",
-    "timestamp_ns": 1700000000000000000,
-    "sequence_id": 101,
-    "payload": {
-      "voltage": 24.8,
-      "percentage": 0.88
-    }
-  })";
+  RCLCPP_INFO(node->get_logger(), "Starting Secure Telemetry Gateway Standalone Test...");
 
-  std::string mock_temp_payload = R"({
-    "robot_id": "robot_alpha",
-    "sensor_type": "temperature",
-    "timestamp_ns": 1700000001000000000,
-    "sequence_id": 102,
-    "payload": {
-      "temperature": 42.5
-    }
-  })";
+  // Simulate an incoming encrypted payload structure for testing
+  std::string client_id = "amr_robot_01";
+  std::vector<uint8_t> dummy_ciphertext = {0x01, 0x02, 0x03, 0x04};
+  std::vector<uint8_t> dummy_iv(12, 0x00);
+  std::vector<uint8_t> dummy_tag(16, 0x00);
 
-  // Feed mock frames to gateway pipeline
-  node->process_incoming_raw_payload(mock_battery_payload);
-  node->process_incoming_raw_payload(mock_temp_payload);
+  // Test the 4-argument secure payload processor pipeline
+  node->process_incoming_raw_payload(client_id, dummy_ciphertext, dummy_iv, dummy_tag);
 
-  // Spin node executor
-  rclcpp::spin(node);
-
-  // Shutdown ROS 2
+  rclcpp::spin_some(node);
   rclcpp::shutdown();
   return 0;
 }

@@ -134,6 +134,16 @@ bool SecurityEngine::check_rate_limit(
   std::lock_guard<std::mutex> lock(rate_limit_mutex_);
 
   auto now = std::chrono::steady_clock::now();
+
+  // If this is a new client, initialize bucket with full burst capacity
+  auto it = buckets_.find(client_id);
+  if (it == buckets_.end()) {
+    TokenBucket new_bucket;
+    new_bucket.tokens = burst_capacity;
+    new_bucket.last_update = now;
+    buckets_[client_id] = new_bucket;
+  }
+
   auto& bucket = buckets_[client_id];
 
   // Calculate elapsed time in seconds
