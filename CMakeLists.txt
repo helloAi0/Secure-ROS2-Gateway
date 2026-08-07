@@ -26,6 +26,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(spdlog REQUIRED)
@@ -42,6 +43,7 @@ add_library(${PROJECT_NAME}_core
   src/ingestion/telemetry_ingestion_engine.cpp
   src/security/security_engine.cpp
   src/storage/storage_engine.cpp
+  src/ros/gateway_node.cpp
 )
 
 target_include_directories(${PROJECT_NAME}_core PUBLIC
@@ -49,8 +51,8 @@ target_include_directories(${PROJECT_NAME}_core PUBLIC
   $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(${PROJECT_NAME}_core PUBLIC
-  rclcpp::rclcpp
+# Non-ROS C++ dependencies (Plain signature to align with ament_target_dependencies)
+target_link_libraries(${PROJECT_NAME}_core
   spdlog::spdlog
   yaml-cpp
   nlohmann_json::nlohmann_json
@@ -59,14 +61,39 @@ target_link_libraries(${PROJECT_NAME}_core PUBLIC
   Threads::Threads
 )
 
+# ROS 2 message and client library dependencies
+ament_target_dependencies(${PROJECT_NAME}_core
+  rclcpp
+  std_msgs
+  sensor_msgs
+  geometry_msgs
+)
+
 # ------------------------------------------------------------------------------
-# 4. INSTALLATION RULES
+# 4. BUILD EXECUTABLE NODE
 # ------------------------------------------------------------------------------
-install(TARGETS ${PROJECT_NAME}_core
+add_executable(${PROJECT_NAME}_node
+  src/main.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}_node
+  ${PROJECT_NAME}_core
+)
+
+ament_target_dependencies(${PROJECT_NAME}_node
+  rclcpp
+  sensor_msgs
+  geometry_msgs
+)
+
+# ------------------------------------------------------------------------------
+# 5. INSTALLATION RULES
+# ------------------------------------------------------------------------------
+install(TARGETS ${PROJECT_NAME}_core ${PROJECT_NAME}_node
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 install(DIRECTORY include/
@@ -78,6 +105,6 @@ install(DIRECTORY config/
 )
 
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(rclcpp spdlog yaml-cpp nlohmann_json OpenSSL SQLite3 Threads)
+ament_export_dependencies(rclcpp std_msgs sensor_msgs geometry_msgs spdlog yaml-cpp nlohmann_json OpenSSL SQLite3 Threads)
 
 ament_package()
