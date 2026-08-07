@@ -39,6 +39,7 @@ add_library(${PROJECT_NAME}_core
   src/utils/logger.cpp
   src/utils/config_manager.cpp
   src/ingestion/telemetry_ingestion_engine.cpp
+  src/security/security_engine.cpp
 )
 
 target_include_directories(${PROJECT_NAME}_core PUBLIC
