@@ -12,6 +12,7 @@
 #include <sensor_msgs/msg/battery_state.hpp>
 #include <sensor_msgs/msg/temperature.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
+#include <std_msgs/msg/string.hpp>
 
 #include "secure_telemetry_gateway/containers/concurrent_queue.hpp"
 #include "secure_telemetry_gateway/models/telemetry_data.hpp"
@@ -38,12 +39,14 @@ private:
   void init_subsystems();
   void worker_thread_loop();
   void publish_ros_messages(const models::TelemetryData& data);
+  void raw_telemetry_callback(const std_msgs::msg::String::SharedPtr msg);
 
   ingestion::TelemetryIngestionEngine ingestion_engine_;
   security::SecurityEngine security_engine_;
   std::unique_ptr<storage::StorageEngine> storage_engine_;
   containers::ConcurrentQueue<models::TelemetryData> telemetry_queue_;
 
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr raw_sub_;
   rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_pub_;
   rclcpp::Publisher<sensor_msgs::msg::Temperature>::SharedPtr temp_pub_;
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_pub_;

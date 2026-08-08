@@ -1,5 +1,6 @@
 #include "secure_telemetry_gateway/ros/gateway_node.hpp"
 #include "secure_telemetry_gateway/utils/logger.hpp"
+#include <nlohmann/json.hpp>
 
 namespace secure_telemetry_gateway {
 namespace ros {
@@ -51,12 +52,28 @@ void GatewayNode::init_subsystems() {
 
   auto qos = rclcpp::SensorDataQoS();
 
+  // Subscriber to receive encrypted data from the Mock Publisher
+  raw_sub_ = this->create_subscription<std_msgs::msg::String>(
+      "~/telemetry_raw", 10,
+      std::bind(&GatewayNode::raw_telemetry_callback, this, std::placeholders::_1));
+
   battery_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("~/telemetry/battery", qos);
   temp_pub_ = this->create_publisher<sensor_msgs::msg::Temperature>("~/telemetry/temperature", qos);
   twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("~/telemetry/velocity", qos);
+}
 
-  secret_key_ = security::SecurityEngine::generate_secure_random_bytes(security::AES_256_KEY_SIZE);
-  iv_ = security::SecurityEngine::generate_secure_random_bytes(security::GCM_IV_SIZE);
+void GatewayNode::raw_telemetry_callback(const std_msgs::msg::String::SharedPtr msg) {
+  try {
+    auto j = nlohmann::json::parse(msg->data);
+    std::string sender_id = j["client_id"];
+    std::vector<uint8_t> payload = j["ciphertext"];
+    std::vector<uint8_t> iv = j["iv"];
+    std::vector<uint8_t> tag = j["tag"];
+    
+    process_incoming_raw_payload(sender_id, payload, iv, tag);
+  } catch (const std::exception& e) {
+    LOG_ERROR("GatewayNode: Failed to parse incoming raw telemetry JSON: {}", e.what());
+  }
 }
 
 bool GatewayNode::process_incoming_raw_payload(
