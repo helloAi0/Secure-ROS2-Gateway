@@ -12,7 +12,6 @@ find_package(geometry_msgs REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(SQLite3 REQUIRED)
 find_package(nlohmann_json REQUIRED)
-find_package(fmt REQUIRED)
 
 include_directories(
   include
@@ -29,13 +28,11 @@ add_library(secure_telemetry_gateway_core SHARED
   src/utils/logger.cpp
 )
 
-# Use explicit OpenSSL targets for modern CMake, and add fmt
 target_link_libraries(secure_telemetry_gateway_core
   OpenSSL::Crypto
   OpenSSL::SSL
   ${SQLite3_LIBRARIES}
   nlohmann_json::nlohmann_json
-  fmt::fmt
 )
 
 ament_target_dependencies(secure_telemetry_gateway_core
@@ -46,18 +43,12 @@ ament_target_dependencies(secure_telemetry_gateway_core
 
 # Gateway Node Executable
 add_executable(secure_telemetry_gateway_node src/main.cpp)
-target_link_libraries(secure_telemetry_gateway_node 
-  secure_telemetry_gateway_core 
-  fmt::fmt
-)
+target_link_libraries(secure_telemetry_gateway_node secure_telemetry_gateway_core)
 ament_target_dependencies(secure_telemetry_gateway_node rclcpp)
 
 # Mock Publisher Executable
 add_executable(mock_telemetry_publisher src/mock_telemetry_publisher.cpp)
-target_link_libraries(mock_telemetry_publisher 
-  secure_telemetry_gateway_core 
-  fmt::fmt
-)
+target_link_libraries(mock_telemetry_publisher secure_telemetry_gateway_core)
 ament_target_dependencies(mock_telemetry_publisher rclcpp)
 
 # Install Targets
@@ -70,14 +61,23 @@ install(TARGETS
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-# Install Header Directories
 install(DIRECTORY include/
   DESTINATION include
 )
 
-# Install Launch and Config Files
 install(DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}
 )
+
+# Unit Testing Targets
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+
+  ament_add_gtest(test_security_engine test/test_security_engine.cpp)
+  target_link_libraries(test_security_engine secure_telemetry_gateway_core)
+
+  ament_add_gtest(test_storage_engine test/test_storage_engine.cpp)
+  target_link_libraries(test_storage_engine secure_telemetry_gateway_core)
+endif()
 
 ament_package()
