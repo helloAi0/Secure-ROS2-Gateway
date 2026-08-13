@@ -69,15 +69,20 @@ install(DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}
 )
 
-# Unit Testing Targets
+# Combined Testing Targets (Unit + Integration)
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
+  find_package(launch_testing_ament_cmake REQUIRED)
 
+  # Unit Tests (Lesson 12)
   ament_add_gtest(test_security_engine test/test_security_engine.cpp)
   target_link_libraries(test_security_engine secure_telemetry_gateway_core)
 
   ament_add_gtest(test_storage_engine test/test_storage_engine.cpp)
   target_link_libraries(test_storage_engine secure_telemetry_gateway_core)
+
+  # Integration Test (Lesson 13)
+  add_launch_test(test/test_gateway_integration.launch.py)
 endif()
 
 ament_package()
