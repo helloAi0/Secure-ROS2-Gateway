@@ -1,0 +1,16 @@
+[Unit]
+Description=Secure Telemetry Gateway ROS 2 Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=user_taha5253
+WorkingDirectory=/home/user_taha5253/ros2_ws
+ExecStart=/bin/bash -c "source /opt/ros/jazzy/setup.bash && source /home/user_taha5253/ros2_ws/install/setup.bash && ros2 launch secure_telemetry_gateway gateway.launch.py"
+Restart=always
+RestartSec=5s
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

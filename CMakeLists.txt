@@ -90,4 +90,10 @@ if(BUILD_TESTING)
   add_launch_test(test/test_gateway_integration.launch.py)
 endif()
 
+# Add to the bottom of CMakeLists.txt
+install(
+  DIRECTORY launch config systemd
+  DESTINATION share/${PROJECT_NAME}
+)
+
 ament_package()

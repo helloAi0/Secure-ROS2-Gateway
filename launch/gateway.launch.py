@@ -5,14 +5,15 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     pkg_share = get_package_share_directory('secure_telemetry_gateway')
-    param_config = os.path.join(pkg_share, 'config', 'gateway_params.yaml')
+    default_config_path = os.path.join(pkg_share, 'config', 'gateway_config.yaml')
 
     gateway_node = Node(
         package='secure_telemetry_gateway',
         executable='secure_telemetry_gateway_node',
-        name='secure_telemetry_gateway_node',
+        name='secure_telemetry_gateway',
         output='screen',
-        parameters=[param_config]
+        emulate_tty=True,
+        parameters=[default_config_path]
     )
 
     return LaunchDescription([
