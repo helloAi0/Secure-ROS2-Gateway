@@ -5,6 +5,7 @@
 #include <vector>
 #include <mutex>
 #include <memory>
+#include <atomic>
 #include <sqlite3.h>
 #include "secure_telemetry_gateway/models/telemetry_data.hpp"
 
@@ -32,20 +33,26 @@ public:
   StorageEngine& operator=(const StorageEngine&) = delete;
 
   /**
-   * @brief Opens the SQLite connection, enables WAL mode, and creates tables/indexes.
+   * @brief Explicitly initializes database. Thread-safe and safe to call multiple times.
    * @return true on successful initialization, false on error.
    */
   bool init();
 
   /**
-   * @brief Inserts a single TelemetryData frame into the database using prepared statements.
+   * @brief Thread-safe check to see if the storage engine is fully initialized.
+   * @return true if initialized and ready for operations, false otherwise.
+   */
+  bool is_ready() const;
+
+  /**
+   * @brief Inserts a single TelemetryData frame into the database. Auto-initializes if needed.
    * @param data Telemetry frame to insert.
    * @return true on success, false on failure.
    */
   bool insert_telemetry(const models::TelemetryData& data);
 
   /**
-   * @brief Inserts a batch of TelemetryData frames inside a single database transaction.
+   * @brief Inserts a batch of TelemetryData frames inside a single transaction. Auto-initializes if needed.
    * @param batch Vector of telemetry frames.
    * @return true if entire batch committed successfully, false otherwise.
    */
@@ -53,16 +60,11 @@ public:
 
   /**
    * @brief Queries recent telemetry records for a specific robot ID.
-   * @param robot_id Target robot identifier string.
-   * @param limit Maximum number of records to return.
-   * @return std::vector<models::TelemetryData> Retrieved telemetry frames.
    */
   std::vector<models::TelemetryData> query_telemetry(const std::string& robot_id, uint64_t limit = 100);
 
   /**
    * @brief Purges telemetry records older than a nanosecond timestamp threshold.
-   * @param timestamp_ns Cutoff nanosecond timestamp.
-   * @return true on successful purge, false on failure.
    */
   bool purge_older_than(uint64_t timestamp_ns);
 
@@ -72,14 +74,20 @@ public:
   void close();
 
 private:
+  void ensure_initialized();
+  bool init_internal();
   bool enable_wal_mode();
   bool create_schema();
+  void close_internal();
 
   std::string db_path_;
   sqlite3* db_{nullptr};
   sqlite3_stmt* insert_stmt_{nullptr};
+
   mutable std::mutex db_mutex_;
-  bool is_initialized_{false};
+  std::once_flag init_flag_;
+  std::atomic<bool> is_initialized_{false};
+  std::atomic<bool> init_failed_{false};
 };
 
 } // namespace storage

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(secure_telemetry_gateway)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(-Wall -Wextra -Wpedantic -O3)
 endif()
 
 find_package(ament_cmake REQUIRED)
@@ -51,11 +51,16 @@ add_executable(mock_telemetry_publisher src/mock_telemetry_publisher.cpp)
 target_link_libraries(mock_telemetry_publisher secure_telemetry_gateway_core)
 ament_target_dependencies(mock_telemetry_publisher rclcpp)
 
+# Performance Benchmark Executable
+add_executable(benchmark_telemetry_pipeline test/benchmark_telemetry_pipeline.cpp)
+target_link_libraries(benchmark_telemetry_pipeline secure_telemetry_gateway_core)
+
 # Install Targets
 install(TARGETS
   secure_telemetry_gateway_core
   secure_telemetry_gateway_node
   mock_telemetry_publisher
+  benchmark_telemetry_pipeline
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
@@ -69,19 +74,19 @@ install(DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}
 )
 
-# Combined Testing Targets (Unit + Integration)
+# Combined Testing Targets
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   find_package(launch_testing_ament_cmake REQUIRED)
 
-  # Unit Tests (Lesson 12)
+  # Unit Tests
   ament_add_gtest(test_security_engine test/test_security_engine.cpp)
   target_link_libraries(test_security_engine secure_telemetry_gateway_core)
 
   ament_add_gtest(test_storage_engine test/test_storage_engine.cpp)
   target_link_libraries(test_storage_engine secure_telemetry_gateway_core)
 
-  # Integration Test (Lesson 13)
+  # Integration Test
   add_launch_test(test/test_gateway_integration.launch.py)
 endif()
 
