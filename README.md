@@ -112,11 +112,11 @@ ros2 run secure_telemetry_gateway gateway_node
 
 <hr />
 
-##👤 Author
-###Taha Udaipurwala
+## 👤 Author
 
-* **GitHub** : @helloAi0
+### Taha Udaipurwala
 
-* **Project Repository** : Secure-ROS2-Gateway
+* **GitHub:** [@helloAi0](https://github.com/helloAi0)
+* **Project Repository:** [Secure-ROS2-Gateway](https://github.com/helloAi0/Secure-ROS2-Gateway)
 
 <hr />
