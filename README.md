@@ -1,10 +1,23 @@
 <h1 align="center">🛡️ Secure ROS 2 Telemetry Gateway</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Language-C%2B%2B20-00599C?style=for-the-badge&logo=cplusplus&logoColor=white" alt="C++20" />
-  <img src="https://img.shields.io/badge/Robotics-ROS%202%20Jazzy-22314E?style=for-the-badge&logo=ros&logoColor=white" alt="ROS 2" />
-  <img src="https://img.shields.io/badge/Security-OpenSSL%20AES--256--GCM-721412?style=for-the-badge&logo=openssl&logoColor=white" alt="OpenSSL" />
-  <img src="https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
+  <b>A Zero-Trust, High-Throughput Edge Security Node for Autonomous Robotic Fleets</b><br>
+  <sub>Created & Engineered by <b>Taha Udaipurwala</b></sub>
+</p>
+
+<p align="center">
+  <a href="https://en.cppreference.com/w/cpp/20" target="_blank">
+    <img src="https://img.shields.io/badge/C%2B%2B-20-00599C?style=for-the-badge&logo=cplusplus&logoColor=white" alt="C++20" />
+  </a>
+  <a href="https://docs.ros.org/en/jazzy/" target="_blank">
+    <img src="https://img.shields.io/badge/ROS_2-Jazzy-22314E?style=for-the-badge&logo=ros&logoColor=white" alt="ROS 2" />
+  </a>
+  <a href="https://www.openssl.org/" target="_blank">
+    <img src="https://img.shields.io/badge/OpenSSL-AES--256--GCM-721412?style=for-the-badge&logo=openssl&logoColor=white" alt="OpenSSL" />
+  </a>
+  <a href="https://react.dev/" target="_blank">
+    <img src="https://img.shields.io/badge/React-Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
+  </a>
 </p>
 
 <p align="center">
@@ -18,7 +31,7 @@
 Because edge security gateways operate as headless backend daemons, I built a **React + Vite production-grade dashboard** to simulate the C++ node's internal state. This allows engineers and recruiters to interact with the system architecture directly in the browser.
 
 <p align="center">
-  👉 <a href="https://helloAi0.github.io/Secure-ROS2-Gateway/"><strong>Launch Live Telemetry Command Center</strong></a>
+  👉 <a href="https://helloAi0.github.io/Secure-ROS2-Gateway/" target="_blank"><strong>Launch Live Telemetry Command Center</strong></a>
 </p>
 
 <div align="center">
@@ -33,6 +46,7 @@ Because edge security gateways operate as headless backend daemons, I built a **
 - [Core Engineering Decisions](#-core-engineering-decisions)
 - [Threat Modeling & Mitigation](#-threat-modeling--mitigation)
 - [Local Build & Deployment](#-local-build--deployment)
+- [Author](#-author)
 
 <hr />
 
