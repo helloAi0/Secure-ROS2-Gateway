@@ -1,14 +1,31 @@
-A high-performance, edge-deployed security node designed for autonomous robotic fleets (AMRs, AGVs, UAVs). This gateway sits between ROS 2 hardware nodes and cloud storage, cryptographically verifying, decrypting, buffering, and persisting high-frequency telemetry data with sub-millisecond latency.
+<h1 align="center">🛡️ Secure ROS 2 Telemetry Gateway</h1>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Language-C%2B%2B20-00599C?style=for-the-badge&logo=cplusplus&logoColor=white" alt="C++20" />
+  <img src="https://img.shields.io/badge/Robotics-ROS%202%20Jazzy-22314E?style=for-the-badge&logo=ros&logoColor=white" alt="ROS 2" />
+  <img src="https://img.shields.io/badge/Security-OpenSSL%20AES--256--GCM-721412?style=for-the-badge&logo=openssl&logoColor=white" alt="OpenSSL" />
+  <img src="https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
+</p>
+
+<p align="center">
+  A high-performance, edge-deployed security node designed for autonomous robotic fleets (AMRs, AGVs, UAVs). This gateway sits between ROS 2 hardware nodes and cloud storage, cryptographically verifying, decrypting, buffering, and persisting high-frequency telemetry data with sub-millisecond latency.
+</p>
+
+<hr />
 
 ## 🌐 Interactive Architectural Simulator
 
 Because edge security gateways operate as headless backend daemons, I built a **React + Vite production-grade dashboard** to simulate the C++ node's internal state. This allows engineers and recruiters to interact with the system architecture directly in the browser.
 
-👉 **[Launch Live Telemetry Command Center](https://helloAi0.github.io/Secure-ROS2-Gateway/)**
+<p align="center">
+  👉 <a href="https://helloAi0.github.io/Secure-ROS2-Gateway/"><strong>Launch Live Telemetry Command Center</strong></a>
+</p>
 
-![Production Operations Center](assets/dashboard.png)
+<div align="center">
+  <img src="assets/dashboard.png" alt="Production Operations Center" width="100%" />
+</div>
 
----
+<hr />
 
 ## 📖 Table of Contents
 - [The Problem it Solves](#-the-problem-it-solves)
@@ -17,7 +34,7 @@ Because edge security gateways operate as headless backend daemons, I built a **
 - [Threat Modeling & Mitigation](#-threat-modeling--mitigation)
 - [Local Build & Deployment](#-local-build--deployment)
 
----
+<hr />
 
 ## 🎯 The Problem it Solves
 
@@ -27,7 +44,7 @@ In modern industrial robotics, transmitting raw ROS 2 sensor telemetry directly 
 1. **Zero-Trust Ingestion:** All DDS packets are forced through an AES-256-GCM verification pipeline.
 2. **I/O Decoupling:** Hardware ingestion threads are completely isolated from disk writing threads using a lock-free Ring Buffer.
 
----
+<hr />
 
 ## ⚙️ System Architecture
 
@@ -40,7 +57,7 @@ The data pipeline is designed for strict concurrency and memory safety, ensuring
 | **3. Buffering** | **MPMC Queue** | A Multi-Producer, Multi-Consumer memory ring buffer that absorbs traffic spikes without blocking the network threads. |
 | **4. Persistence** | **SQLite (WAL Mode)** | Batches data from the queue and commits it to persistent disk asynchronously using Write-Ahead Logging. |
 
----
+<hr />
 
 ## 🧠 Core Engineering Decisions
 
@@ -53,7 +70,7 @@ Galois/Counter Mode (GCM) provides both confidentiality (encryption) and authent
 ### Why SQLite WAL Mode?
 Standard SQLite locks the entire database during writes. Write-Ahead Logging (WAL) allows concurrent readers and writers, preventing the edge database from becoming a bottleneck during high-throughput metric flushing.
 
----
+<hr />
 
 ## 🚨 Threat Modeling & Mitigation
 
@@ -62,7 +79,7 @@ The simulator demonstrates the gateway's response to network anomalies:
 *   **Man-in-the-Middle (MitM) Attack:** If a malicious node intercepts and alters telemetry data, the AES-GCM tag mismatch instantly flags the payload. The gateway drops the packet, isolates the threat, and preserves database integrity.
 *   **DDoS / Traffic Spikes:** If ingestion frequency exceeds disk write speeds, the MPMC Ring Buffer absorbs the impact, scaling up CPU/Memory usage dynamically rather than crashing the ROS 2 node.
 
----
+<hr />
 
 ## 🚀 Local Build & Deployment
 
