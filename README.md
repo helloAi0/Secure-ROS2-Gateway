@@ -112,11 +112,32 @@ ros2 run secure_telemetry_gateway gateway_node
 
 <hr />
 
-## 👤 Author
+<br />
 
-### Taha Udaipurwala
+<div align="center">
+  <table style="border: none; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="border: none; padding: 20px;">
+        <img src="https://github.com" width="120px" style="border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" alt="Taha Udaipurwala Profile" />
+        <br /><br />
+        <h2 style="margin: 0; font-size: 1.8em;">👤 System Architect & Engineer</h2>
+        <h3 style="margin: 5px 0 15px 0; color: #58a6ff; font-weight: 500;">Taha Udaipurwala</h3>
+        <p style="max-width: 500px; color: #8b949e; font-size: 0.95em; line-height: 1.5;">
+          Specializing in zero-trust edge computing, high-performance robotics telemetry pipelines, and memory-safe concurrent C++ architectures.
+        </p>
+        <br />
+        <a href="https://github.com/helloAi0" target="_blank">
+          <img src="https://shields.io" alt="GitHub" />
+        </a>
+        &nbsp;&nbsp;
+        <a href="https://github.com/helloAi0/Secure-ROS2-Gateway" target="_blank">
+          <img src="https://shields.io" alt="Repository" />
+        </a>
+      </td>
+    </tr>
+  </table>
+</div>
 
-* **GitHub:** [@helloAi0](https://github.com/helloAi0)
-* **Project Repository:** [Secure-ROS2-Gateway](https://github.com/helloAi0/Secure-ROS2-Gateway)
+<br />
 
 <hr />
