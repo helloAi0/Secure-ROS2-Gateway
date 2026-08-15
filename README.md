@@ -110,9 +110,9 @@ colcon build --packages-select secure_telemetry_gateway
 source install/setup.bash
 ros2 run secure_telemetry_gateway gateway_node
 
-👤 Author
-Taha Udaipurwala
+##👤 Author
+###Taha Udaipurwala
 
-GitHub: @helloAi0
+* **GitHub** : @helloAi0
 
-Project Repository: Secure-ROS2-Gateway
+* **Project Repository** : Secure-ROS2-Gateway
